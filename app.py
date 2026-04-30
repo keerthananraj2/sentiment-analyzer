@@ -1,15 +1,23 @@
 import streamlit as st
 import pickle
 import re
+import os
+import nltk
+from nltk.corpus import stopwords
 
-# ------------------ PAGE CONFIG ------------------
+# Download stopwords (needed for deployment)
+nltk.download('stopwords')
+
+stop_words = set(stopwords.words('english'))
+
+# Page config
 st.set_page_config(
     page_title="Sentiment Analyzer",
     page_icon="🧠",
     layout="centered"
 )
 
-# ------------------ NEON STYLE ------------------
+# Styling
 st.markdown("""
 <style>
 body {
@@ -20,7 +28,6 @@ body {
     color: white;
 }
 
-/* Neon Title */
 .neon-title {
     text-align: center;
     font-size: 60px;
@@ -34,14 +41,12 @@ body {
         0 0 80px #ff00ff;
 }
 
-/* Subtitle */
 .neon-subtitle {
     text-align: center;
     color: #00f0ff;
     text-shadow: 0 0 10px #00f0ff;
 }
 
-/* Button Styling */
 div.stButton > button {
     background: linear-gradient(90deg, #ff00ff, #00f0ff);
     color: white;
@@ -52,14 +57,12 @@ div.stButton > button {
     box-shadow: 0 0 10px #00f0ff;
 }
 
-/* Text Area Styling */
 textarea {
     background-color: #111 !important;
     color: white !important;
     border-radius: 10px !important;
 }
 
-/* Result Box */
 .result-box {
     text-align: center;
     font-size: 30px;
@@ -68,29 +71,34 @@ textarea {
 </style>
 """, unsafe_allow_html=True)
 
-# ------------------ TITLE ------------------
+# Title
 st.markdown('<div class="neon-title">SENTIMENT ANALYZER</div>', unsafe_allow_html=True)
 st.markdown('<div class="neon-subtitle">Analyze Customer Reviews Instantly with AI ⚡</div>', unsafe_allow_html=True)
 
 st.divider()
 
-# ------------------ LOAD MODEL ------------------
-model = pickle.load(open("backend/model.pkl", "rb"))
-vectorizer = pickle.load(open("backend/vectorizer.pkl", "rb"))
+# Safe model loading (important for deployment)
+BASE_DIR = os.path.dirname(__file__)
 
-# ------------------ CLEAN FUNCTION ------------------
+model = pickle.load(open(os.path.join(BASE_DIR, "backend/model.pkl"), "rb"))
+vectorizer = pickle.load(open(os.path.join(BASE_DIR, "backend/vectorizer.pkl"), "rb"))
+
+# Correct cleaning (same as training)
 def clean_text(text):
     text = str(text)
     text = text.lower()
-    text = re.sub(r'<.*?>', '', text)
+    text = re.sub(r'http\S+', '', text)   # remove URLs
+    text = re.sub(r'@\w+', '', text)      # remove mentions
     text = re.sub(r'[^a-zA-Z]', ' ', text)
     text = re.sub(r'\s+', ' ', text).strip()
-    return text
+    words = text.split()
+    words = [w for w in words if w not in stop_words]
+    return " ".join(words)
 
-# ------------------ INPUT ------------------
+# Input
 user_input = st.text_area("Enter your review here:", height=150)
 
-# ------------------ PREDICTION ------------------
+# Prediction
 if st.button("🔍 Analyze Sentiment"):
     if user_input.strip() == "":
         st.warning("⚠️ Please enter a review!")
@@ -103,13 +111,8 @@ if st.button("🔍 Analyze Sentiment"):
 
         if result[0] == "positive":
             st.markdown('<div class="result-box" style="color:#00ff88;">😊 POSITIVE</div>', unsafe_allow_html=True)
-
-        elif result[0] == "negative":
+        else:
             st.markdown('<div class="result-box" style="color:#ff4b5c;">😡 NEGATIVE</div>', unsafe_allow_html=True)
 
-        else:
-            st.markdown('<div class="result-box" style="color:#00f0ff;">😐 NEUTRAL</div>', unsafe_allow_html=True)
-
-# ------------------ FOOTER ------------------
 st.divider()
 st.caption("Check the emotions in your text!")
