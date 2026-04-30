@@ -5,8 +5,11 @@ import os
 import nltk
 from nltk.corpus import stopwords
 
-# Download stopwords (needed for deployment)
-nltk.download('stopwords')
+# Download only if not already present
+try:
+    nltk.data.find('corpora/stopwords')
+except LookupError:
+    nltk.download('stopwords')
 
 stop_words = set(stopwords.words('english'))
 
