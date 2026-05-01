@@ -5,7 +5,7 @@ import os
 import nltk
 from nltk.corpus import stopwords
 
-# Download only if not already present
+# Download stopwords only if not present
 try:
     nltk.data.find('corpora/stopwords')
 except LookupError:
@@ -80,18 +80,18 @@ st.markdown('<div class="neon-subtitle">Analyze Customer Reviews Instantly with 
 
 st.divider()
 
-# Safe model loading (important for deployment)
+# Load model safely (important for deployment)
 BASE_DIR = os.path.dirname(__file__)
 
 model = pickle.load(open(os.path.join(BASE_DIR, "backend/model.pkl"), "rb"))
 vectorizer = pickle.load(open(os.path.join(BASE_DIR, "backend/vectorizer.pkl"), "rb"))
 
-# Correct cleaning (same as training)
+# Text cleaning (same as training)
 def clean_text(text):
     text = str(text)
     text = text.lower()
-    text = re.sub(r'http\S+', '', text)   # remove URLs
-    text = re.sub(r'@\w+', '', text)      # remove mentions
+    text = re.sub(r'http\S+', '', text)
+    text = re.sub(r'@\w+', '', text)
     text = re.sub(r'[^a-zA-Z]', ' ', text)
     text = re.sub(r'\s+', ' ', text).strip()
     words = text.split()
@@ -112,10 +112,16 @@ if st.button("🔍 Analyze Sentiment"):
 
         st.divider()
 
+        # 🔥 3-class output
         if result[0] == "positive":
             st.markdown('<div class="result-box" style="color:#00ff88;">😊 POSITIVE</div>', unsafe_allow_html=True)
-        else:
+
+        elif result[0] == "negative":
             st.markdown('<div class="result-box" style="color:#ff4b5c;">😡 NEGATIVE</div>', unsafe_allow_html=True)
 
+        elif result[0] == "neutral":
+            st.markdown('<div class="result-box" style="color:#00f0ff;">😐 NEUTRAL</div>', unsafe_allow_html=True)
+
+# Footer
 st.divider()
 st.caption("Check the emotions in your text!")

@@ -1,23 +1,33 @@
 from fastapi import FastAPI
 import pickle
 import re
+import os
+import nltk
 from nltk.corpus import stopwords
+
+# Ensure stopwords are available
+try:
+    nltk.data.find('corpora/stopwords')
+except LookupError:
+    nltk.download('stopwords')
+
+stop_words = set(stopwords.words('english'))
 
 # Initialize app
 app = FastAPI()
 
-# Load model
-model = pickle.load(open("model.pkl", "rb"))
-vectorizer = pickle.load(open("vectorizer.pkl", "rb"))
+# Safe path loading (important for deployment)
+BASE_DIR = os.path.dirname(__file__)
 
-# Stopwords
-stop_words = set(stopwords.words('english'))
+model = pickle.load(open(os.path.join(BASE_DIR, "model.pkl"), "rb"))
+vectorizer = pickle.load(open(os.path.join(BASE_DIR, "vectorizer.pkl"), "rb"))
 
-# Cleaning function (same as before)
+# Cleaning function (must match training)
 def clean_text(text):
     text = str(text)
     text = text.lower()
-    text = re.sub(r'<.*?>', '', text)
+    text = re.sub(r'http\S+', '', text)   # remove URLs
+    text = re.sub(r'@\w+', '', text)      # remove mentions
     text = re.sub(r'[^a-zA-Z]', ' ', text)
     text = re.sub(r'\s+', ' ', text).strip()
     words = text.split()
@@ -36,4 +46,7 @@ def predict(review: str):
     vec = vectorizer.transform([cleaned])
     result = model.predict(vec)
 
-    return {"sentiment": result[0]}
+    return {
+        "review": review,
+        "sentiment": result[0]
+    }
