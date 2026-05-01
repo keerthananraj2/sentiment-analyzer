@@ -1,13 +1,12 @@
-# Customer Review Sentiment Analyzer
-
-This project is a machine learning web application that classifies customer reviews as positive or negative.
+## Live Demo
+https://sentiment-analyzergit-ai.streamlit.app/
 
 ## Features
-- Text preprocessing using NLP
-- TF-IDF vectorization
-- Logistic Regression model
-- Streamlit UI for interaction
+- 3-class sentiment classification (Positive, Negative, Neutral)
+- Real-time prediction
+- Streamlit-based UI
+- FastAPI backend
+- NLP preprocessing with TF-IDF
 
-## How to run
-pip install -r requirements.txt
-streamlit run app.py
+## Tech Stack
+Python, Scikit-learn, NLTK, Streamlit, FastAPI
